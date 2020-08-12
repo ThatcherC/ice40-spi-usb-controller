@@ -118,8 +118,6 @@ void xfer_spi(uint8_t *data, int n)
 }
 
 
-
-
 void set_gpio(int a, int b, int c)
 {
   // sets two bytes - intial led_values and i/o direction
@@ -162,9 +160,6 @@ void set_gpio(int a, int b, int c)
 }
 
 
-
-
-
 int get_cdone()
 {
 	uint8_t data;
@@ -177,17 +172,14 @@ int get_cdone()
 
 int main(int argc, char **argv)
 {
-
 	const char *devstr = NULL;
-
 	enum ftdi_interface ifnum = INTERFACE_B;
 
-  int led_value;
-  if(strcmp(argv[1], "on") == 0)
-    led_value = 1;
-  else if (strcmp(argv[1], "off") == 0)
-    led_value = 0;
-
+	int led_value;
+	if(strcmp(argv[1], "on") == 0)
+	led_value = 1;
+	else if (strcmp(argv[1], "off") == 0)
+	led_value = 0;
 
 	// ---------------------------------------------------------
 	// iNITIalize USB connection to FT2232H
@@ -229,47 +221,44 @@ int main(int argc, char **argv)
 
 
 
-  // enable clock divide by 5
-  send_byte(0x8b);
+	// enable clock divide by 5
+	send_byte(0x8b);
 
-  // set 6 MHz clock
-  send_byte(0x86);
-  send_byte(0x02);   // 1 or 2 MHz ?
-  send_byte(0x00);
+	// set 6 MHz clock
+	send_byte(0x86);
+	send_byte(0x02);   // 1 or 2 MHz ?
+	send_byte(0x00);
 
-  fprintf(stderr, "cdone: %s\n", get_cdone() ? "high" : "low");
+	fprintf(stderr, "cdone: %s\n", get_cdone() ? "high" : "low");
 
-  // initialize data out
-  set_gpio(1, 1, 1);
+	// initialize data out
+	set_gpio(1, 1, 1);
 
-  fprintf(stderr, "cdone: %s\n", get_cdone() ? "high" : "low");
+	fprintf(stderr, "cdone: %s\n", get_cdone() ? "high" : "low");
 
+	uint8_t data[1];
 
-  
-    uint8_t data[1]; 
+	while(true) {
+		// assert CS
+		fprintf(stderr, "writing data led_value %d\n", led_value);
+		led_value = !led_value;
 
-    while(true) {
-    // assert CS 
+		set_gpio(0, 1, 1);
 
-      fprintf(stderr, "writing data led_value %d\n", led_value);
-      led_value = !led_value;
+		if(led_value == 1)
+		data[0] = 0xcc;
+		else if(led_value == 0)
+		data[0] = 0xdd;
 
-      set_gpio(0, 1, 1);
+		// write
+		send_spi( data, 1 );
 
-      if(led_value == 1)
-        data[0] = 0xcc;
-      else if(led_value == 0)
-        data[0] = 0xdd;
+		// deassert CS
+		set_gpio(1, 1, 1);
 
-      // write
-      send_spi( data, 1 );
-
-      // deassert CS
-      set_gpio(1, 1, 1);
-
-      fprintf(stderr, "done\n");
-      sleep(1);
-    }
+		fprintf(stderr, "done\n");
+		sleep(1);
+	}
 
 
 	// ---------------------------------------------------------
@@ -282,5 +271,3 @@ int main(int argc, char **argv)
 	ftdi_deinit(&ftdic);
 	return 0;
 }
-
-
