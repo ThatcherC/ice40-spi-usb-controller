@@ -117,6 +117,19 @@ void xfer_spi(uint8_t *data, int n)
 		data[i] = recv_byte();
 }
 
+// !!! see FTDI AN 108, section 3.3.6 !
+void read_spi(uint8_t *data, int n)
+{
+	if (n < 1)
+		return;
+
+	send_byte(0x20);  //maybe 0x20 or 0x24
+	send_byte(n-1);
+	send_byte((n-1) >> 8);
+
+	for (int i = 0; i < n; i++)
+		data[i] = recv_byte();
+}
 
 void set_gpio(int a, int b, int c)
 {
@@ -219,8 +232,6 @@ int main(int argc, char **argv)
 		error();
 	}
 
-
-
 	// enable clock divide by 5
 	send_byte(0x8b);
 
@@ -252,6 +263,20 @@ int main(int argc, char **argv)
 
 		// write
 		send_spi( data, 1 );
+
+		// deassert CS
+		set_gpio(1, 1, 1);
+
+		usleep(100000);
+
+		set_gpio(0, 1, 1);
+
+		// read
+		uint8_t rec[10] = {1,2,3,4,5,6,7,8,9,10};
+		read_spi(rec,2);
+		for(int b=0;b<4;b++){
+			printf("%d\n",rec[b]);
+		}
 
 		// deassert CS
 		set_gpio(1, 1, 1);
