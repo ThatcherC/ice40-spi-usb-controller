@@ -4,6 +4,10 @@
 http://blog.julian1.io/2017/01/29/icestick-ftdi-spi.html
 
 ----
+### Dependencies
+- `libftdi-dev`
+	- Install on Ubuntu with `$ sudo apt-get install libftdi-dev`
+
 
 ### refs 
 basics,
