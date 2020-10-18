@@ -25,7 +25,7 @@ module SPI_slave(
   input MOSI,
   output MISO,
 
-  output led1 
+  output reg led1
 );
 
   // clk domain crossing - this works by storing the last two sck states, and then compare them to
