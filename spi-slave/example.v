@@ -72,11 +72,38 @@ module SPI_slave(
   always @(posedge clk)
     byte_received <= SSEL_active && SCK_risingedge && (bitcnt==3'b111) ;
 
+
+  // added from https://www.fpga4fun.com/SPI2.html
+  reg [7:0] byte_data_sent;
+
+  reg [7:0] cnt;
+  always @(posedge clk) if(SSEL_startmessage) cnt<=cnt+8'h1;  // count the messages
+
+  always @(posedge clk)
+  if(SSEL_active)
+  begin
+    if(SSEL_startmessage)
+      byte_data_sent <= cnt;  // first byte sent in a message is the message count
+    else
+    if(SCK_fallingedge)
+    begin
+      if(bitcnt==3'b111)
+        byte_data_sent <= 8'h05;  // after that, we send 0s
+      else
+        byte_data_sent <= {byte_data_sent[6:0], 1'b0};
+    end
+  end
+
+  assign MISO = byte_data_sent[7];  // send MSB first
+  // end https://www.fpga4fun.com/SPI2.html snippet
+
+
+
 // toggle would be better
 
   always @(posedge clk)
     begin
-      if(byte_received) 
+      if(byte_received)
         case (byte_data_received)
           8'hcc:
             led1 <= 1;
